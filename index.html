@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cricket Score Predictor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            color: #fff;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px 40px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        select:focus,
+        input[type="number"]:focus {
+            box-shadow: 0 0 8px #4ca1af;
+        }
+        
+        button {
+            width: 100%;
+            background: #4ca1af;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        button:hover {
+            background: #367a82;
+        }
+        
+        .result {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            text-align: center;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Cricket Score Predictor</h1>
+        <form id="predictForm">
+            <label for="battingTeam">Batting Team</label>
+            <select id="battingTeam" required>
+        <option value="" disabled selected>Select team</option>
+        <option value="TeamA">Team A</option>
+        <option value="TeamB">Team B</option>
+        <option value="TeamC">Team C</option>
+        <option value="TeamD">Team D</option>
+      </select>
+
+            <label for="bowlingTeam">Bowling Team</label>
+            <select id="bowlingTeam" required>
+        <option value="" disabled selected>Select team</option>
+        <option value="TeamA">Team A</option>
+        <option value="TeamB">Team B</option>
+        <option value="TeamC">Team C</option>
+        <option value="TeamD">Team D</option>
+      </select>
+
+            <label for="oversDone">Overs Completed</label>
+            <input type="number" id="oversDone" name="oversDone" min="0" max="20" step="0.1" placeholder="e.g. 13.4" required />
+
+            <label for="wicketsLost">Wickets Lost</label>
+            <input type="number" id="wicketsLost" name="wicketsLost" min="0" max="10" step="1" placeholder="e.g. 3" required />
+
+            <label for="currentScore">Current Score</label>
+            <input type="number" id="currentScore" name="currentScore" min="0" step="1" placeholder="e.g. 100" required />
+
+            <button type="submit">Predict Final Score</button>
+        </form>
+
+        <div class="result" id="result"></div>
+        <div class="footer">Simple demonstration using a pre-trained linear regression model implemented in JavaScript.</div>
+    </div>
+
+    <script>
+        // Simulated pre-trained linear regression coefficients (dummy example)
+        // Formula:
+        // predictedFinalScore = (currentScore) 
+        //                      + ( (20 - oversDone) * runRateFactor )
+        //                      - (wicketsLost * wicketPenalty)
+        //                      + teamStrengthDifference
+
+        // We assign arbitrary numeric strength values to teams
+        const teamStrengths = {
+            'TeamA': 75,
+            'TeamB': 70,
+            'TeamC': 65,
+            'TeamD': 60
+        };
+
+        const runRateFactor = 8.5; // estimated average runs per over in remaining overs
+        const wicketPenalty = 7; // runs penalty per wicket lost
+
+        function predictScore(battingTeam, bowlingTeam, oversDone, wicketsLost, currentScore) {
+            const remainingOvers = 20 - oversDone;
+            if (remainingOvers < 0) return null;
+
+            const battingStrength = teamStrengths[battingTeam] || 65;
+            const bowlingStrength = teamStrengths[bowlingTeam] || 65;
+            const teamStrengthDifference = (battingStrength - bowlingStrength) * 0.5; // weighted difference
+
+            let prediction = currentScore + (remainingOvers * runRateFactor) - (wicketsLost * wicketPenalty) + teamStrengthDifference;
+
+            prediction = Math.max(prediction, currentScore); // final score cannot be less than current score
+            prediction = Math.round(prediction);
+            return prediction;
+        }
+
+        const form = document.getElementById('predictForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const battingTeam = document.getElementById('battingTeam').value;
+            const bowlingTeam = document.getElementById('bowlingTeam').value;
+            const oversDone = parseFloat(document.getElementById('oversDone').value);
+            const wicketsLost = parseInt(document.getElementById('wicketsLost').value, 10);
+            const currentScore = parseInt(document.getElementById('currentScore').value, 10);
+
+            if (battingTeam === bowlingTeam) {
+                resultDiv.textContent = "Batting and bowling teams cannot be the same.";
+                return;
+            }
+            if (oversDone < 0 || oversDone > 20) {
+                resultDiv.textContent = "Overs completed must be between 0 and 20.";
+                return;
+            }
+            if (wicketsLost < 0 || wicketsLost > 10) {
+                resultDiv.textContent = "Wickets lost must be between 0 and 10.";
+                return;
+            }
+            if (currentScore < 0) {
+                resultDiv.textContent = "Current score cannot be negative.";
+                return;
+            }
+
+            const predictedScore = predictScore(battingTeam, bowlingTeam, oversDone, wicketsLost, currentScore);
+            if (predictedScore === null) {
+                resultDiv.textContent = "Invalid input values.";
+                return;
+            }
+
+            resultDiv.textContent = `Predicted Final Score: ${predictedScore} runs`;
+        });
+    </script>
+    <script src="app.py">
+    </script>
+</body>
+
+</html>
